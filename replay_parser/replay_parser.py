@@ -83,6 +83,8 @@ class ReplayParser:
 
         assert replay_file.tell() == properties_length + remaining_length + 16
 
+        network_data = self._parse_network_stream(data['network_stream'])
+
         # Run some manual parsing operations.
         data = self.manual_parse(data, replay_file)
 
@@ -180,7 +182,7 @@ class ReplayParser:
     def _read_network_stream(self, replay_file):
         array_length = self._read_integer(replay_file)
 
-        network_stream = self._read_unknown(replay_file, array_length)
+        return self._read_unknown(replay_file, array_length)
 
     def _read_debug_strings(self, replay_file):
         array_length = self._read_integer(replay_file)
@@ -318,6 +320,15 @@ class ReplayParser:
 
         return branches
 
+    ##################
+    # Parsers
+    ##################
+
+    def _parse_network_stream(self, network_data):
+        for byte in network_data:
+            self._debug_bits(network_data)
+            break
+
     # Temporary method while we learn the replay format.
     def manual_parse(self, results, replay_file):
         server_regexp = re.compile(self.SERVER_REGEX)
@@ -334,7 +345,10 @@ class ReplayParser:
     ##################
 
     def _debug_bits(self, replay_file, labels=None):
-        byte = replay_file.read(1)
+        if isinstance(replay_file, str):
+            byte = replay_file
+        else:
+            byte = replay_file.read(1)
         output = ()
 
         for index in xrange(8):
@@ -428,7 +442,7 @@ if __name__ == '__main__':  # pragma: no cover
     with open(filename, 'rb') as replay_file:
         try:
             results = ReplayParser(debug=False).parse(replay_file)
-            # pprint.pprint(results)
+            pprint.pprint(results)
         except IOError as e:
             print(e)
         except struct.error as e:
