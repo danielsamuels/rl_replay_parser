@@ -1,4 +1,6 @@
-from replay_parser import ReplayParser
+from parser import ReplayParser
+import readers
+import utils
 
 import os
 from StringIO import StringIO
@@ -79,6 +81,7 @@ class TestReplayParser(unittest.TestCase):
 
     def test_file_attr(self):
         class Obj:
+
             class File:
                 path = self.folder_path + '2s.replay'
 
@@ -104,17 +107,13 @@ class TestReplayParser(unittest.TestCase):
             parser.parse(None)
 
     def test_read_name_table(self):
-        parser = ReplayParser()
-
         # Passing some unusual data into this function will cause it to throw
         # an exception.
         with open(self.folder_path + '2s.replay', 'rb') as f:
             with self.assertRaises(Exception):
-                parser._read_name_table(f)
+                readers.read_name_table(f)
 
     def test_debug_bits(self):
-        parser = ReplayParser()
-
         data = StringIO()
         data.write(u'\u0001')
         data.seek(0)
@@ -122,7 +121,7 @@ class TestReplayParser(unittest.TestCase):
         stdout = sys.stdout
         sys.stdout = StringIO()
 
-        bits = parser._debug_bits(data)
+        bits = utils.debug_bits(data)
 
         output = sys.stdout.getvalue()
         sys.stdout.close()
@@ -140,8 +139,6 @@ class TestReplayParser(unittest.TestCase):
         self.assertEqual(bits, (1, 0, 0, 0, 0, 0, 0, 0))
 
     def test_debug_bits_with_labels(self):
-        parser = ReplayParser()
-
         data = StringIO()
         data.write(u'\u0001')
         data.seek(0)
@@ -149,7 +146,7 @@ class TestReplayParser(unittest.TestCase):
         stdout = sys.stdout
         sys.stdout = StringIO()
 
-        bits = parser._debug_bits(data, ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'])
+        bits = utils.debug_bits(data, ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'])
 
         output = sys.stdout.getvalue()
         sys.stdout.close()
@@ -167,48 +164,42 @@ class TestReplayParser(unittest.TestCase):
         self.assertEqual(bits, (1, 0, 0, 0, 0, 0, 0, 0))
 
     def test_read_bit(self):
-        parser = ReplayParser()
-        self.assertEqual(parser._read_bit(u'\u0001', 0), 1)
-        self.assertEqual(parser._read_bit(u'\u0001', 1), 0)
-        self.assertEqual(parser._read_bit(u'\u0001', 2), 0)
-        self.assertEqual(parser._read_bit(u'\u0001', 3), 0)
-        self.assertEqual(parser._read_bit(u'\u0001', 4), 0)
-        self.assertEqual(parser._read_bit(u'\u0001', 5), 0)
-        self.assertEqual(parser._read_bit(u'\u0001', 6), 0)
-        self.assertEqual(parser._read_bit(u'\u0001', 7), 0)
+        self.assertEqual(readers.read_bit(u'\u0001', 0), 1)
+        self.assertEqual(readers.read_bit(u'\u0001', 1), 0)
+        self.assertEqual(readers.read_bit(u'\u0001', 2), 0)
+        self.assertEqual(readers.read_bit(u'\u0001', 3), 0)
+        self.assertEqual(readers.read_bit(u'\u0001', 4), 0)
+        self.assertEqual(readers.read_bit(u'\u0001', 5), 0)
+        self.assertEqual(readers.read_bit(u'\u0001', 6), 0)
+        self.assertEqual(readers.read_bit(u'\u0001', 7), 0)
 
     def test_pretty_byte_string(self):
-        parser = ReplayParser()
-        response = parser._pretty_byte_string(u'\u0000\u0001\u0002\u0003')
+        response = utils.pretty_byte_string(u'\u0000\u0001\u0002\u0003')
 
         self.assertEqual(response, '00 01 02 03')
 
     def test_read_integer(self):
-        parser = ReplayParser()
-
         data = StringIO()
         data.write('\x01\x02\x03\x04\x05\x06\x07\x08')
 
         # Signed integers.
         data.seek(0)
-        response = parser._read_integer(data, 1)
+        response = readers.read_integer(data, 1)
         self.assertEqual(response, 1)
 
         data.seek(0)
-        response = parser._read_integer(data, 2)
+        response = readers.read_integer(data, 2)
         self.assertEqual(response, 513)
 
         data.seek(0)
-        response = parser._read_integer(data, 4)
+        response = readers.read_integer(data, 4)
         self.assertEqual(response, 67305985)
 
         data.seek(0)
-        response = parser._read_integer(data, 8)
+        response = readers.read_integer(data, 8)
         self.assertEqual(response, 578437695752307201)
 
     def test_sniff_bytes_0_bytes(self):
-        parser = ReplayParser()
-
         data = StringIO()
         data.write('')
 
@@ -216,7 +207,7 @@ class TestReplayParser(unittest.TestCase):
         sys.stdout = StringIO()
 
         data.seek(0)
-        parser._sniff_bytes(data, 0)
+        utils.sniff_bytes(data, 0)
 
         output = sys.stdout.getvalue()
         sys.stdout.close()
@@ -229,8 +220,6 @@ String: \n\
 """)
 
     def test_sniff_bytes_1_byte(self):
-        parser = ReplayParser()
-
         data = StringIO()
         data.write('\x31')
 
@@ -238,7 +227,7 @@ String: \n\
         sys.stdout = StringIO()
 
         data.seek(0)
-        parser._sniff_bytes(data, 1)
+        utils.sniff_bytes(data, 1)
 
         output = sys.stdout.getvalue()
         sys.stdout.close()
@@ -251,8 +240,6 @@ String: 1
 """)
 
     def test_sniff_bytes_2_bytes(self):
-        parser = ReplayParser()
-
         data = StringIO()
         data.write('\x31\x32')
 
@@ -260,7 +247,7 @@ String: 1
         sys.stdout = StringIO()
 
         data.seek(0)
-        parser._sniff_bytes(data, 2)
+        utils.sniff_bytes(data, 2)
 
         output = sys.stdout.getvalue()
         sys.stdout.close()
@@ -273,8 +260,6 @@ Short: Signed: (12849,) Unsigned: (12849,)
 """)
 
     def test_sniff_bytes_3_bytes(self):
-        parser = ReplayParser()
-
         data = StringIO()
         data.write('\x31\x32\x33')
 
@@ -282,7 +267,7 @@ Short: Signed: (12849,) Unsigned: (12849,)
         sys.stdout = StringIO()
 
         data.seek(0)
-        parser._sniff_bytes(data, 3)
+        utils.sniff_bytes(data, 3)
 
         output = sys.stdout.getvalue()
         sys.stdout.close()
@@ -295,8 +280,6 @@ String: 123
 """)
 
     def test_sniff_bytes_4_bytes(self):
-        parser = ReplayParser()
-
         data = StringIO()
         data.write('\x31\x32\x33\x34')
 
@@ -304,7 +287,7 @@ String: 123
         sys.stdout = StringIO()
 
         data.seek(0)
-        parser._sniff_bytes(data, 4)
+        utils.sniff_bytes(data, 4)
 
         output = sys.stdout.getvalue()
         sys.stdout.close()
