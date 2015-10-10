@@ -30,7 +30,6 @@ def parse_network_stream(replay_file, data):
     # some of them. We also know that each frame is at _least_ 64 bytes long,
     # which means that given the starting point of each frame, we can work out
     # which bit locations *cannot* be start frames. This reduces our search.
-
     invalid_bit_locations = []
 
     # There are a ton of frames which we know are usable. Get those into a list
@@ -87,27 +86,11 @@ def parse_network_stream(replay_file, data):
         # them in future iterations. Given that our forloop is iterating over a
         # generator expression, this should work quite nicely.
 
-        try:
-            if len(bitstore) - offset < 64:
-                print "Ran out of bits."
-                break
-                # TODO: When the bits error is fixed, uncomment this.
-                # raise IndexError("Ran out of bits.")
+        time_bits = utils.multi_bits_to_byte(bitstore, offset)
+        this_time = readers.read_float(time_bits, data_read=True)
 
-            # print '{} / {}'.format(offset, len(bitstore))
-            time_bits = utils.multi_bits_to_byte(bitstore, offset)
-            this_time = readers.read_float(time_bits, data_read=True)
-
-            delta_bits = utils.multi_bits_to_byte(bitstore, offset + 32)
-            this_delta = readers.read_float(delta_bits, data_read=True)
-        except struct.error as e:
-            import math
-            print 'Failed to get offset floats at {}. Byte point is ~{}.'.format(
-                offset,
-                math.floor(offset / 8)
-            )
-            print e
-            break
+        delta_bits = utils.multi_bits_to_byte(bitstore, offset + 32)
+        this_delta = readers.read_float(delta_bits, data_read=True)
 
         if last_time is not None and (
             this_time < last_time or
