@@ -83,7 +83,7 @@ def read_key_frames(replay_file):
 
 
 def read_key_frame(replay_file):
-    time = read_float(replay_file, 4)
+    time = read_float(replay_file)
     frame = read_integer(replay_file)
     file_position = read_integer(replay_file)
 
@@ -240,10 +240,10 @@ def read_property_tree(replay_file, objects, classes):
             'properties': map_properties(branch['id'] if branch['id'] > 0 else branch['parent_id'])
         }
 
-    return branches
+    return classed
 
 
-def read_integer(replay_file, length=4):
+def read_integer(replay_file, length=4, data_read=False):
     number_format = {
         1: '<b',
         2: '<h',
@@ -251,19 +251,27 @@ def read_integer(replay_file, length=4):
         8: '<q',
     }[length]
 
-    bytes_read = replay_file.read(length)
+    if not data_read:
+        bytes_read = replay_file.read(length)
+    else:
+        bytes_read = replay_file
+
     value = struct.unpack(number_format, bytes_read)[0]
 
     return value
 
 
-def read_float(replay_file, length):
+def read_float(replay_file, length=4, data_read=False):
     number_format = {
         4: '<f',
         8: '<d'
     }[length]
 
-    bytes_read = replay_file.read(length)
+    if not data_read:
+        bytes_read = replay_file.read(length)
+    else:
+        bytes_read = replay_file
+
     value = struct.unpack(number_format, bytes_read)[0]
 
     return value
@@ -282,9 +290,10 @@ def read_string(replay_file, length=None):
 
 
 def read_bit(string, index):
-    i, j = divmod(index, 8)
+    # We subtract the index from 7 because the bits are reversed.
+    i, j = divmod(7-index, 8)
 
     if ord(string[i]) & (1 << j):
-        return 1
+        return '1'
     else:
-        return 0
+        return '0'
