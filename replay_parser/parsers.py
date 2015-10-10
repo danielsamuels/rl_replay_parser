@@ -23,7 +23,7 @@ def parse_network_stream(replay_file, data):
         data_length,
         data_length * 8,
         data['network_stream_offset'],
-        data['after_network_stream_offset'],
+        data['network_stream_offset'] + data_length + 4
     )
 
     # We know how many frames there are in the replay, and we have data for
