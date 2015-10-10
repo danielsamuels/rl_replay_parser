@@ -3,6 +3,7 @@ import re
 import readers
 import utils
 import json
+import os
 import pprint
 
 
@@ -25,6 +26,9 @@ def parse_network_stream(replay_file, data):
     frames = []
     frames.extend([frame['file_position'] for frame in data['key_frames']])
     frames.sort()
+
+    # Create the cache directory if it doesn't exist.
+    os.mkdir('cache')
 
     # Build the entire network stream as a list of bits. (a.k.a. rip RAM)
     try:
