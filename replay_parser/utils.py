@@ -3,6 +3,31 @@ import struct
 import readers
 
 
+def multi_bits_to_byte(bits, offset=0, num_bytes=4):
+    # Split the bits into chunks of 8 and pass them through.
+
+    # 0:8
+    # 8:16
+    # 16:24
+    # 24:32
+
+    bytes_ = []
+    for x in xrange(num_bytes):
+        left = offset + x * 8
+        right = offset + (x + 1) * 8
+        bytes_.append(bits_to_byte(bits[left:right][::-1]))
+
+    return ''.join(bytes_)
+
+
+def bits_to_byte(bits):
+    chars = []
+    for b in range(len(bits) / 8):
+        byte = bits[b*8:(b+1)*8]
+        chars.append(chr(int(''.join([str(bit) for bit in byte]), 2)))
+    return ''.join(chars)
+
+
 def debug_bits(replay_file, labels=None):
     if isinstance(replay_file, str):
         byte = replay_file
@@ -11,24 +36,19 @@ def debug_bits(replay_file, labels=None):
     output = ()
 
     for index in xrange(8):
-        i, j = divmod(index, 8)
-
-        if ord(byte[i]) & (1 << j):
-            value = '1'
-        else:
-            value = '0'
+        value = readers.read_bit(byte, index)
 
         formatted = value.rjust(index+1, '.').ljust(8, '.')
-        output = output + (int(value),)
+        output = (int(value),) + output
 
-        if labels and len(labels) == 8:
-            print('{} = {}: {}'.format(
-                formatted,
-                labels[index],
-                'Set' if formatted == '1' else 'Not set',
-            ))
-        else:
-            print(value.rjust(index+1, '.').ljust(8, '.'))
+        # if labels and len(labels) == 8:
+        #     print('{} = {}: {}'.format(
+        #         formatted,
+        #         labels[index],
+        #         'Set' if formatted == '1' else 'Not set',
+        #     ))
+        # else:
+        #     print(value.rjust(index+1, '.').ljust(8, '.'))
 
     return output
 
