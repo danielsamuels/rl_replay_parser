@@ -1,3 +1,4 @@
+from itertools import izip_longest
 import struct
 
 import readers
@@ -71,3 +72,10 @@ def sniff_bytes(replay_file, size):
             print("Integer: Signed: {}, Unsigned: {}".format(struct.unpack('<i', b), struct.unpack('<I', b)))
             print("Float: {}".format(struct.unpack('<f', b)))
         print("String: {}".format(b))
+
+
+def grouper(iterable, n, fillvalue=None):
+    "Collect data into fixed-length chunks or blocks"
+    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx
+    args = [iter(iterable)] * n
+    return izip_longest(fillvalue=fillvalue, *args)
