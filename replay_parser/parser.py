@@ -65,9 +65,12 @@ class ReplayParser:
 
         data['key_frames'] = readers.read_key_frames(replay_file)
 
+        data['network_stream_offset'] = replay_file.tell()
         data['network_stream'] = readers.read_network_stream(replay_file)
 
-        print replay_file.tell()
+        data['after_network_stream_offset'] = replay_file.tell()
+        data['network_stream_length'] = data['after_network_stream_offset'] - data['network_stream_offset']
+        data['average_frame'] = data['network_stream_length'] / data['header']['NumFrames']
 
         data['debug_strings'] = readers.read_debug_strings(replay_file)
 
@@ -85,24 +88,26 @@ class ReplayParser:
 
         assert replay_file.tell() == properties_length + remaining_length + 16
 
-        network_data = parsers.parse_network_stream(data['network_stream'])
+        network_data = parsers.parse_network_stream(replay_file, data)
 
         # Run some manual parsing operations.
         data = parsers.manual_parse(data, replay_file)
 
-        # data['network_stream'] = self._process_network_stream(data['network_stream'])
+        data['network_stream'] = '..snip..'
         return data
 
 
 if __name__ == '__main__':  # pragma: no cover
     filename = sys.argv[1]
+
     if not filename.endswith('.replay'):
         sys.exit('Filename {} does not appear to be a valid replay file'.format(filename))
 
     with open(filename, 'rb') as replay_file:
         results = ReplayParser(debug=False).parse(replay_file)
         try:
-            pprint.pprint(results)
+            # pprint.pprint(results)
+            print results['average_frame']
         except IOError as e:
             print(e)
         except struct.error as e:
