@@ -68,10 +68,6 @@ class ReplayParser:
         data['network_stream_offset'] = replay_file.tell()
         data['network_stream'] = readers.read_network_stream(replay_file)
 
-        data['after_network_stream_offset'] = replay_file.tell()
-        data['network_stream_length'] = data['after_network_stream_offset'] - data['network_stream_offset']
-        data['average_frame'] = data['network_stream_length'] / data['header']['NumFrames']
-
         data['debug_strings'] = readers.read_debug_strings(replay_file)
 
         data['goal_ticks'] = readers.read_goal_ticks(replay_file)
@@ -106,8 +102,8 @@ if __name__ == '__main__':  # pragma: no cover
     with open(filename, 'rb') as replay_file:
         results = ReplayParser(debug=False).parse(replay_file)
         try:
+            pass
             # pprint.pprint(results)
-            print results['average_frame']
         except IOError as e:
             print(e)
         except struct.error as e:
