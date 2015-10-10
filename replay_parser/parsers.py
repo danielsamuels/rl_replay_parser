@@ -28,7 +28,8 @@ def parse_network_stream(replay_file, data):
     frames.sort()
 
     # Create the cache directory if it doesn't exist.
-    os.mkdir('cache')
+    if not os.path.exists('cache'):
+        os.mkdir('cache')
 
     # Build the entire network stream as a list of bits. (a.k.a. rip RAM)
     try:
