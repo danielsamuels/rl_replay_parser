@@ -76,7 +76,7 @@ def parse_network_stream(replay_file, data):
     assert len(bitstore) == data_length * 8
 
     last_time = last_delta = None
-    frame_hits = []
+    frames = []
 
     for offset in (x for x in xrange(len(bitstore)) if x not in invalid_bit_locations):
         # Attempt to read a time and delta from this bit offset. If the data
@@ -108,37 +108,75 @@ def parse_network_stream(replay_file, data):
         ):
             continue
 
-        if len(frame_hits) > 0:
-            prev_bits = offset - frame_hits[-1] - 1
-            print 'Frame has {} bits of data:'.format(prev_bits)
-
-            print ' '.join(
-                ''.join(str(el) for el in list(group))
-                for group in utils.grouper(
-                    bitstore[frame_hits[-1]:frame_hits[-1]+prev_bits], 8, fillvalue=''
-                )
-            )
-            print
-
-        print 'Frame: Position: {} Time: {} Delta: {}.'.format(
-            offset,
-            this_time,
-            this_delta,
-        )
+        # print 'Frame: Position: {} Time: {} Delta: {}.'.format(
+        #     offset,
+        #     this_time,
+        #     this_delta,
+        # )
 
         last_time = this_time
         last_delta = this_delta
 
-        print 'Added offset {} to list of frame hits.'.format(offset)
-        frame_hits.append(offset)
+        frames.append(offset)
 
-        if len(frame_hits) == data['header']['NumFrames']:
-            print 'Attained all frames.'
+        if len(frames) == data['header']['NumFrames']:
             break
 
         invalid_bit_locations.extend(range(offset + 1, offset + 64))
 
-    assert len(frame_hits) == data['header']['NumFrames']
+    assert len(frames) == data['header']['NumFrames']
+
+    for index, offset in enumerate(frames):
+        # Get the length of this frame.
+        if index + 1 < len(frames):
+            length = frames[index + 1] - offset
+        else:
+            length = len(bitstore) - offset
+
+        print index, offset, length
+
+        # Parse the frame for actors.
+        internal_offset = 0
+        while bitstore[internal_offset] == 1:
+            print bitstore[offset + internal_offset:offset + internal_offset+64]
+
+            # Read the next 10 bits to get the ID of this actor.
+            bitstring = ''.join([
+                str(bitstore[v]) for v in xrange(internal_offset + 1, internal_offset + 11)
+            ])
+
+            actor_id = int(bitstring, 2)
+            channel_state = bitstore[internal_offset + 11]
+
+            if channel_state == 0:
+                internal_offset += 1
+                continue
+
+            actor_state = bitstore[internal_offset + 12]
+
+            # This is a new actor.
+            if actor_state == 1:
+                # Skip bit 13
+
+                bitstring = ''.join([
+                    str(bitstore[v]) for v in xrange(internal_offset + 14, internal_offset + 22)
+                ])
+
+                actor_type_id = int(bitstring[::-1], 2)
+
+                print 'actor_type_id: ', actor_type_id
+                print data['objects'][actor_type_id]
+                # actor_type = int(bitstring[::-1], 2)
+
+                print bitstore[internal_offset + 22:internal_offset + 46]
+
+            print actor_state
+
+
+            break
+
+        break
+
 
 
 # Temporary method while we learn the replay format.
