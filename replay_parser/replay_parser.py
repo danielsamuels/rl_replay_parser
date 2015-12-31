@@ -88,7 +88,8 @@ class ReplayParser:
 
         # data['network_stream'] = self._process_network_stream(data['network_stream'])
 
-        replay_file.close()
+        if replay_file.file.__class__.__name__ != 'InMemoryUploadedFile':
+            replay_file.close()
 
         return data
 
