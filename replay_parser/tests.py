@@ -77,6 +77,45 @@ class TestReplayParser(unittest.TestCase):
             self.assertEqual(response['header']['Id'], 'BBA60356493A53E6D4D7ADBA4E5D99B9')
             self.assertIn('PlayerStats', response['header'])
 
+    def test_108_replay(self):
+        """
+        A replay from version 1.05.
+        """
+
+        parser = ReplayParser()
+
+        with open(self.folder_path + '1.08.replay', 'rb') as f:
+            response = parser.parse(f)
+            self.assertIsInstance(response, dict)
+            self.assertEqual(response['header']['Id'], '9E4289CA4109CEF9FF2185AD861445EB')
+            self.assertIn('PlayerStats', response['header'])
+
+    def test_110_replay(self):
+        """
+        A replay from version 1.05.
+        """
+
+        parser = ReplayParser()
+
+        with open(self.folder_path + '1.10.replay', 'rb') as f:
+            response = parser.parse(f)
+            self.assertIsInstance(response, dict)
+            self.assertEqual(response['header']['Id'], 'BF5FF16E41A5E76552888FB1F0CE6990')
+            self.assertIn('PlayerStats', response['header'])
+
+    def test_111_replay(self):
+        """
+        A replay from version 1.05.
+        """
+
+        parser = ReplayParser()
+
+        with open(self.folder_path + '1.11.replay', 'rb') as f:
+            response = parser.parse(f)
+            self.assertIsInstance(response, dict)
+            self.assertEqual(response['header']['Id'], '158DEE6541E83F745C12E8A3EE72B479')
+            self.assertIn('PlayerStats', response['header'])
+
     def test_broken_replay(self):
         """
         This replay file was purposefully broken by deleting a large portion

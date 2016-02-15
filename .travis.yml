@@ -3,5 +3,7 @@ sudo: false
 install:
     - pip install coveralls
 script: coverage run --source=replay_parser -m unittest discover
+notifications:
+  slack: danielsamuels:zKT38a9Ut5LB2kh9ffRNP1fL
 after_success:
   - coveralls
